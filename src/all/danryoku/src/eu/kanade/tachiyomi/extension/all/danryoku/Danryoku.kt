@@ -66,7 +66,10 @@ abstract class Danryoku : KeiSource() {
                 thumbnail_url = article.selectFirst("figure img")?.realImgSrc
             }
         }
-        val hasNext = document.selectFirst("nav.nav-links a.next") != null
+        /*val hasNext = document.selectFirst("nav.nav-links a.next") != null
+        return MangasPage(mangas, hasNext)*/
+        // 只要能找到带有 next 类的 <a> 标签，就说明有下一页
+        val hasNext = document.selectFirst("a.next") != null
         return MangasPage(mangas, hasNext)
     }
 
