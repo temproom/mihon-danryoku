@@ -174,18 +174,18 @@ abstract class Danryoku : KeiSource() {
             }
     }
 
-    override fun imageUrlRequest(page: Page): Request {
+    /*override fun imageUrlRequest(page: Page): Request {
         return Request.Builder()
             .url(page.url)
             .header("Referer", "$baseUrl/")
             .build()
-    }
+    }*/
 
     // ========================= Filters (静态配置) =========================
     // 不再从 API 动态获取，直接根据首页导航栏硬编码
     override val supportsFilterFetching get() = false
 
-    override fun getFilterList(): FilterList {
+    override fun getFilterList(data: JsonElement?): FilterList {
         val filters = mutableListOf<Filter<*>>(
             Filter.Header("Note: Category and Tag filters work by redirecting to the corresponding archive page."),
             Filter.Separator(),
