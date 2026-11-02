@@ -38,6 +38,9 @@ jobs:
             -storepass danryoku123 -keypass danryoku123 \
             -dname "CN=Danryoku, OU=Extension, O=Personal, L=City, ST=State, C=US"
 
+      - name: Fix code formatting
+        run: ./gradlew :src:all:danryoku:spotlessApply
+
       - name: Build Danryoku Release APK
         env:
           ALIAS: danryoku
