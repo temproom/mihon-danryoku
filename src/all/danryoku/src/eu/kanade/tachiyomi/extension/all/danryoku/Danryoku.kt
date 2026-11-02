@@ -22,11 +22,8 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Source
-class Danryoku : KeiSource() {
+abstract class Danryoku : KeiSource() {
 
-    override val name = "Danryoku"
-    override val baseUrl = "https://danryoku.com"
-    override val lang = "all"
     override val supportsLatest = true
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
