@@ -75,42 +75,42 @@ abstract class Danryoku : KeiSource() {
 
     // ========================= Search (HTML) =========================
     override suspend fun getSearchMangaList(page: Int, query: String, filters: FilterList): MangasPage {
-        // 1. 构建基础搜索 URL
-        val urlBuilder = baseUrl.toHttpUrl().newBuilder()
-            .addQueryParameter("s", query)
-            .addQueryParameter("paged", page.toString())
-
-        // 2. 应用分类筛选（仅当选择了具体分类时）
         val categoryFilter = filters.firstInstanceOrNull<CategoryFilter>()
-        val categoryPath = categoryFilter?.toUriPart().orEmpty()
-        if (categoryPath.isNotBlank()) {
-            // 分类筛选通过路径进行，例如 /category/cosplay/
-            // 注意：分类与搜索关键词能否共存，取决于站点实际行为，这里按路径优先处理
-            val categoryUrl = "$baseUrl/category/$categoryPath/".toHttpUrl().newBuilder()
-                .addQueryParameter("s", query)
-                .addQueryParameter("paged", page.toString())
-                .build()
-            return fetchArticleList(categoryUrl)
-        }
-
-        // 3. 应用标签筛选（标签通过 URL 路径 /tag/xxx/ 进行筛选）
         val tagGroup = filters.firstInstanceOrNull<TagGroup>()
-        if (tagGroup != null) {
-            val includedTags = tagGroup.state
-                .filter { it.state == Filter.TriState.STATE_INCLUDE }
-                .map { it.id } // id 现在是标签路径，如 "sayo-momo"
+
+        // 确定基础路径（不带页码）
+        val basePath = if (categoryFilter != null && categoryFilter.state != 0) {
+            val catSlug = categoryFilter.toUriPart()
+            "$baseUrl/category/$catSlug/"
+        } else {
+            val includedTags = tagGroup?.state?.filter { it.state == Filter.TriState.STATE_INCLUDE }?.map { it.id } ?: emptyList()
             if (includedTags.isNotEmpty()) {
-                // 简化处理：取第一个包含的标签进行筛选（多标签组合在 HTML 模式下较难实现）
-                val tagUrl = "$baseUrl/tag/${includedTags.first()}/".toHttpUrl().newBuilder()
-                    .addQueryParameter("s", query)
-                    .addQueryParameter("paged", page.toString())
-                    .build()
-                return fetchArticleList(tagUrl)
+                // 取第一个包含的标签进行筛选
+                "$baseUrl/tag/${includedTags.first()}/"
+            } else {
+                "$baseUrl/" // 默认首页
             }
         }
 
-        // 4. 无筛选器，仅关键词搜索
-        return fetchArticleList(urlBuilder.build())
+        // 拼装正确的分页 URL 结构： /page/N/ 或 /category/xxx/page/N/
+        val pageUrlString = if (page <= 1) {
+            basePath
+        } else {
+            if (basePath == "$baseUrl/") {
+                "$baseUrl/page/$page/"
+            } else {
+                "${basePath}page/$page/"
+            }
+        }
+
+        // 最后加上搜索关键词
+        val finalUrl = pageUrlString.toHttpUrl().newBuilder().apply {
+            if (query.isNotEmpty()) {
+                addQueryParameter("s", query)
+            }
+        }.build()
+
+        return fetchArticleList(finalUrl)
     }
 
     // ========================= Details (HTML) =========================
